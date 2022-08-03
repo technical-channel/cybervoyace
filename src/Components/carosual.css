@@ -1,0 +1,8 @@
+.carousel-inner {
+  display: flex;
+  /* position: relative; */
+  width: 80%;
+  overflow: hidden;
+  align-content: center;
+  justify-content: center;
+}

@@ -1,0 +1,4 @@
+export const busdContract = "0x741Ba690248f0d2868E0D4bdFF8024486eF0453F";
+
+export const ico = "0x95175f49161269007fB587221722749270b25E9c";
+
