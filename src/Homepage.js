@@ -593,7 +593,7 @@ function HomePage(props) {
                                 }}
                               >
                                 <div>
-                                  <h2
+                                  <p
                                     style={{
                                       textAlign: "center",
                                       color: "black !important",
@@ -601,7 +601,7 @@ function HomePage(props) {
                                     }}
                                   >
                                     Buy Cyber
-                                  </h2>
+                                  </p>
                                   <div
                                     style={{
                                       display: "flex",
@@ -748,7 +748,7 @@ function HomePage(props) {
                                 }}
                               >
                                 <div>
-                                  <h2
+                                  <p
                                     style={{
                                       textAlign: "center",
                                       color: "black",
@@ -756,7 +756,7 @@ function HomePage(props) {
                                     }}
                                   >
                                     Buy Voyce
-                                  </h2>
+                                  </p>
                                   <div
                                     style={{
                                       display: "flex",
