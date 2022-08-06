@@ -2,3 +2,4 @@ export const busdContract = "0x741Ba690248f0d2868E0D4bdFF8024486eF0453F";
 
 export const ico = "0x95175f49161269007fB587221722749270b25E9c";
 
+export const cyberICO = "0x7C70984539777a52Dd0ca62DBBa32C553C30d624";

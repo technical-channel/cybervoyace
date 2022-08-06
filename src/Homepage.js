@@ -34,7 +34,7 @@ import { ConnectWeb3Wallet } from "./Services";
 import "./App.css";
 import { useEffect, useState } from "react";
 
-import { busdContract, ico } from "./Config/Contract/ICO_Contract";
+import { busdContract, cyberICO, ico } from "./Config/Contract/ICO_Contract";
 import Spinner from "react-spinkit";
 import { busdAbi } from "./Config/ABI/busdABI";
 import { icoAbi } from "./Config/ABI/ICO_ABI";
@@ -44,6 +44,7 @@ import CounterComponent from "./Components/Counter";
 import Footer from "./Components/Footer";
 import Footer2 from "./Components/Footer2";
 import Carosual from "./Components/Carosual";
+import axios from "axios";
 function HomePage(props) {
   const [connect, setConnect] = useState(false);
   const navigate = useNavigate();
@@ -51,12 +52,14 @@ function HomePage(props) {
   const [tokenData, setTokenData] = useState("");
   const [whitelisted, setWhitelisted] = useState(false);
   const [isApprovedBuy, setIsApprovedBuy] = useState(true);
+  const [detailsCyber, setDetailsCyber] = useState("");
   const [details, setDetails] = useState([]);
   const [token, setToken] = useState("");
   const [spinnerAppr, setSpinnerAppr] = useState(false);
   const [kees, setKees] = useState("");
   const [spinnerBuy, setSpinnerBuy] = useState(false);
   const [addApprove, setAddAppr] = useState("");
+  const [switchIco, setSwitchIco] = useState("No");
   const [inputDisable, setInputDisable] = useState(false);
 
   const [counter, setCounter] = useState(0);
@@ -79,7 +82,29 @@ function HomePage(props) {
       } else {
         let contract = await new web3_.eth.Contract(icoAbi, ico).methods;
         const res = await contract.getTokenomics().call();
+        let cyberContract = await new web3_.eth.Contract(icoAbi, cyberICO)
+          .methods;
+        const TokenomicsCyber = await cyberContract.getTokenomics().call();
+        setDetailsCyber(TokenomicsCyber);
         setConnect(true);
+        axios
+          .post("https://cybervoyce.herokuapp.com/verify", {
+            Address: [props.metamaskAddress],
+          })
+          .then(function (response) {
+            console.log(response.data, "in this console yeh yoooo");
+            if (response.data.Result == "true") {
+              console.log("in this true one", response.data);
+              setWhitelisted(true);
+            } else {
+              console.log("in this false one", response.data.Result);
+              setWhitelisted(false);
+            }
+          })
+          .catch((err) => {
+            setWhitelisted(false);
+            console.log(err.message, "in this console yeh yoooo");
+          });
         const whitelisted = await contract
           .verifyUser(props.metamaskAddress)
           .call();
@@ -202,7 +227,77 @@ function HomePage(props) {
       }
     }
   }
+  async function handleApproveCyber() {
+    if (!connect) {
+      Swal.fire("Please connect Metamask");
+      setToken("");
+      setKees("");
+      setIsApproved(true);
+      setIsApprovedBuy(true);
+    } else {
+      if (token === "0") {
+        setError("Please Enter Value Greater Then 0");
+        setToken("");
+        setToken("");
+        setKees("");
+        setIsApproved(true);
+        setIsApprovedBuy(true);
+      } else {
+        setSpinnerAppr(true);
+        let res = await new web3_.eth.Contract(busdAbi, busdContract).methods
+          .balanceOf(props.metamaskAddress)
+          .call();
 
+        console.log(res / Math.pow(10, 18), token);
+        let addAppr = store.getState().ConnectivityReducer.metamaskAddress;
+        setAddAppr(addAppr);
+
+        const tkn = web3_.utils.toWei(token.toString(), "ether");
+
+        console.log(res / Math.pow(10, 18) < parseFloat(token));
+        if (res / Math.pow(10, 18) > parseFloat(token)) {
+          await new web3_.eth.Contract(busdAbi, busdContract).methods
+            .approve(cyberICO, tkn)
+            .send({
+              from: props.metamaskAddress,
+            })
+            .on("transactionHash", function (transactionHash) {
+              console.log(transactionHash);
+            })
+            .on("confirmation", () => {})
+            // get New Contract Address
+            .then(async (res) => {
+              Swal.fire("Transaction Successful", "", "success");
+              setIsApproved(false);
+              setInputDisable(true);
+              setSpinnerAppr(false);
+              setIsApprovedBuy(false);
+            })
+            .catch((err) => {
+              console.log(err);
+              Swal.fire(
+                "Transaction Failed",
+                "Please Try After Some Time",
+                "error"
+              );
+              setToken("");
+              setKees("");
+              setIsApproved(true);
+              setSpinnerAppr(false);
+            });
+        } else {
+          Swal.fire(
+            `Please Enter Atleast ${token} BUSD In Your Account To Intiate This Transaction.`
+          );
+          setToken("");
+          setKees("");
+          setIsApproved(true);
+          setIsApprovedBuy(true);
+          setSpinnerAppr(false);
+        }
+      }
+    }
+  }
   async function handleBuy() {
     const tkn = web3_.utils.toWei(token.toString(), "ether");
     setSpinnerBuy(true);
@@ -248,7 +343,51 @@ function HomePage(props) {
     }
     console.log(await new web3_.eth.Contract(icoAbi, ico).methods);
   }
+  async function handleBuyCyber() {
+    const tkn = web3_.utils.toWei(token.toString(), "ether");
+    setSpinnerBuy(true);
+    if (details && details[3] > Math.floor(new Date().getTime() / 1000.0)) {
+      Swal.fire(
+        `Investment will start from ${moment
+          .unix(details[3])
+          .format("DD/MM/YYYY")}`
+      );
+      setToken("");
+      setKees("");
+      setInputDisable(false);
+      setIsApproved(true);
+      setIsApprovedBuy(true);
+      setSpinnerAppr(false);
+      setSpinnerBuy(false);
+    } else {
+      await new web3_.eth.Contract(icoAbi, cyberICO).methods
+        .SaleICOToken(tkn)
+        .send({
+          from: props.metamaskAddress,
+        })
+        .then((res) => {
+          console.log(res);
+          setSpinnerBuy(false);
+          Swal.fire("Transaction Successful", "", "success");
+          setToken("");
+          setIsApproved(true);
+          setSpinnerAppr(false);
+          setKees("");
+          navigate("/success");
+        })
 
+        .catch((err) => {
+          setSpinnerBuy(false);
+          console.log(err);
+          Swal.fire(
+            "Transaction Failed",
+            "Please Try After Some Time",
+            "error"
+          );
+        });
+    }
+    console.log(await new web3_.eth.Contract(icoAbi, cyberICO).methods);
+  }
   return (
     <div className="main-container">
       <header className="main-header">
@@ -417,155 +556,336 @@ function HomePage(props) {
                     <>
                       {whitelisted ? (
                         <>
-                          <div
-                            className="flexDiv"
-                            style={{
-                              background: "white",
-                              maxWidth: "400px",
-                              backgroundColor: "#fff",
-                              color: "#000",
-                              borderRadius: "10px",
-                              padding: "25px 15px",
-                              textAlign: "justify",
-                            }}
-                          >
-                            <div>
-                              <h3
-                                className="why-us-section__content__title"
-                                style={{ textAlign: "center", color: "black" }}
-                              >
-                                Buy CyberVoyce
-                              </h3>
+                          <div className="flexDivBtn" style={{ padding: 30 }}>
+                            <button
+                              className="glow-on-hover"
+                              onClick={() => setSwitchIco("cyber")}
+                            >
                               <div
                                 style={{
                                   display: "flex",
-                                  alignItems: "center",
+                                  justifyContent: "space-around",
                                 }}
                               >
-                                <input
-                                  type="text"
-                                  onChange={handleChange}
-                                  placeholder="Enter Amount To Buy"
-                                  style={{
-                                    padding: 8,
-                                    marginTop: 10,
-                                    width: "100%",
-                                    border: "2px solid black !important",
-                                    backgroundColor: "#e9ecef",
-                                    borderRadius: 5,
-                                    fontSize: 14,
-                                  }}
-                                  value={token}
-                                  disabled={inputDisable}
-                                />
-                                <div
-                                  style={{
-                                    padding: 5,
-                                    border: "1px solid black",
-                                    width: "85px",
-                                    justifyContent: "space-around",
-                                    marginTop: "10px",
-                                    backgroundColor: "#e9ecef",
-                                    borderRadius: 7,
-                                    marginLeft: 8,
-                                    fontSize: 14,
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <img src={bnb} width="20" />
-                                  <div>BUSD</div>
-                                </div>
+                                <>Buy Cyber</>
                               </div>
-
-                              <span>
-                                <p style={{ color: "red" }}>{error}</p>
-                              </span>
+                            </button>
+                            <button
+                              className="glow-on-hover"
+                              onClick={() => setSwitchIco("Voyace")}
+                            >
+                              <>Buy Voyace</>
+                            </button>
+                          </div>
+                          {switchIco == "cyber" ? (
+                            <>
+                              {" "}
                               <div
+                                className="flexDiv"
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
+                                  background: "white",
+                                  maxWidth: "400px",
+                                  backgroundColor: "#fff",
+                                  color: "#000",
+                                  borderRadius: "10px",
+                                  padding: "25px 15px",
+                                  textAlign: "justify",
                                 }}
                               >
-                                <input
-                                  type="text"
-                                  placeholder={`${kees} Voyce`}
-                                  style={{
-                                    padding: 10,
-                                    marginTop: 10,
-                                    fontSize: 15,
-                                    width: "100%",
-                                  }}
-                                  disabled
-                                />
-                                <div
-                                  style={{
-                                    padding: 5,
-                                    border: "1px solid black",
-                                    width: "85px",
-                                    justifyContent: "space-around",
-                                    marginTop: "10px",
-                                    borderRadius: 7,
-                                    marginLeft: 8,
-                                    fontSize: 14,
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <img src={logoVlt} width="20" />
-                                  <div>Voyce</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flexDivBtn">
-                              {isApproved ? (
-                                <>
-                                  {" "}
-                                  <button
-                                    className="glow-on-hover"
-                                    onClick={handleApprove}
-                                    disabled={
-                                      token == "" || isApproved == false
-                                    }
+                                <div>
+                                  <h2
+                                    style={{
+                                      textAlign: "center",
+                                      color: "black !important",
+                                    }}
                                   >
+                                    Buy Cyber
+                                  </h2>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <input
+                                      type="text"
+                                      onChange={handleChange}
+                                      placeholder="Enter Amount To Buy"
+                                      style={{
+                                        padding: 8,
+                                        marginTop: 10,
+                                        width: "100%",
+                                        border: "2px solid black !important",
+                                        backgroundColor: "#e9ecef",
+                                        borderRadius: 5,
+                                        fontSize: 14,
+                                      }}
+                                      value={token}
+                                      disabled={inputDisable}
+                                    />
                                     <div
                                       style={{
-                                        display: "flex",
+                                        padding: 5,
+                                        border: "1px solid black",
+                                        width: "85px",
                                         justifyContent: "space-around",
+                                        marginTop: "10px",
+                                        backgroundColor: "#e9ecef",
+                                        borderRadius: 7,
+                                        marginLeft: 8,
+                                        fontSize: 14,
+                                        display: "flex",
+                                        alignItems: "center",
                                       }}
                                     >
-                                      {spinnerAppr ? (
-                                        <Spinner
-                                          name="circle"
-                                          style={{ width: 30, height: 30 }}
-                                        />
-                                      ) : (
-                                        <>Approve</>
-                                      )}
+                                      <img src={bnb} width="20" />
+                                      <div>BUSD</div>
                                     </div>
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    className="glow-on-hover"
-                                    onClick={handleBuy}
-                                    disabled={isApproved || isApprovedBuy}
+                                  </div>
+
+                                  <span>
+                                    <p style={{ color: "red" }}>{error}</p>
+                                  </span>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
                                   >
-                                    {spinnerBuy ? (
-                                      <Spinner
-                                        name="circle"
-                                        style={{ width: 30, height: 30 }}
-                                      />
-                                    ) : (
-                                      <>Buy</>
-                                    )}
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
+                                    <input
+                                      type="text"
+                                      placeholder={`${kees} Cyber`}
+                                      style={{
+                                        padding: 10,
+                                        marginTop: 10,
+                                        fontSize: 15,
+                                        width: "100%",
+                                      }}
+                                      disabled
+                                    />
+                                    <div
+                                      style={{
+                                        padding: 5,
+                                        border: "1px solid black",
+                                        width: "85px",
+                                        justifyContent: "space-around",
+                                        marginTop: "10px",
+                                        borderRadius: 7,
+                                        marginLeft: 8,
+                                        fontSize: 14,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div>Cyber</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flexDivBtn">
+                                  {isApproved ? (
+                                    <>
+                                      {" "}
+                                      <button
+                                        className="glow-on-hover"
+                                        onClick={handleApproveCyber}
+                                        disabled={
+                                          token == "" || isApproved == false
+                                        }
+                                      >
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            justifyContent: "space-around",
+                                          }}
+                                        >
+                                          {spinnerAppr ? (
+                                            <Spinner
+                                              name="circle"
+                                              style={{ width: 30, height: 30 }}
+                                            />
+                                          ) : (
+                                            <>Approve</>
+                                          )}
+                                        </div>
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        className="glow-on-hover"
+                                        onClick={handleBuyCyber}
+                                        disabled={isApproved || isApprovedBuy}
+                                      >
+                                        {spinnerBuy ? (
+                                          <Spinner
+                                            name="circle"
+                                            style={{ width: 30, height: 30 }}
+                                          />
+                                        ) : (
+                                          <>Buy</>
+                                        )}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          ) : null}
+                          {switchIco == "Voyace" ? (
+                            <>
+                              <div
+                                className="flexDiv"
+                                style={{
+                                  background: "white",
+                                  maxWidth: "400px",
+                                  backgroundColor: "#fff",
+                                  color: "#000",
+                                  borderRadius: "10px",
+                                  padding: "25px 15px",
+                                  textAlign: "justify",
+                                }}
+                              >
+                                <div>
+                                  <h2
+                                    style={{
+                                      textAlign: "center",
+                                      color: "black",
+                                    }}
+                                  >
+                                    Buy Voyce
+                                  </h2>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <input
+                                      type="text"
+                                      onChange={handleChange}
+                                      placeholder="Enter Amount To Buy"
+                                      style={{
+                                        padding: 8,
+                                        marginTop: 10,
+                                        width: "100%",
+                                        border: "2px solid black !important",
+                                        backgroundColor: "#e9ecef",
+                                        borderRadius: 5,
+                                        fontSize: 14,
+                                      }}
+                                      value={token}
+                                      disabled={inputDisable}
+                                    />
+                                    <div
+                                      style={{
+                                        padding: 5,
+                                        border: "1px solid black",
+                                        width: "85px",
+                                        justifyContent: "space-around",
+                                        marginTop: "10px",
+                                        backgroundColor: "#e9ecef",
+                                        borderRadius: 7,
+                                        marginLeft: 8,
+                                        fontSize: 14,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <img src={bnb} width="20" />
+                                      <div>BUSD</div>
+                                    </div>
+                                  </div>
+
+                                  <span>
+                                    <p style={{ color: "red" }}>{error}</p>
+                                  </span>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <input
+                                      type="text"
+                                      placeholder={`${kees} Voyce`}
+                                      style={{
+                                        padding: 10,
+                                        marginTop: 10,
+                                        fontSize: 15,
+                                        width: "100%",
+                                      }}
+                                      disabled
+                                    />
+                                    <div
+                                      style={{
+                                        padding: 5,
+                                        border: "1px solid black",
+                                        width: "85px",
+                                        justifyContent: "space-around",
+                                        marginTop: "10px",
+                                        borderRadius: 7,
+                                        marginLeft: 8,
+                                        fontSize: 14,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div>Voyce</div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flexDivBtn">
+                                  {isApproved ? (
+                                    <>
+                                      {" "}
+                                      <button
+                                        className="glow-on-hover"
+                                        onClick={handleApprove}
+                                        disabled={
+                                          token == "" || isApproved == false
+                                        }
+                                      >
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            justifyContent: "space-around",
+                                          }}
+                                        >
+                                          {spinnerAppr ? (
+                                            <Spinner
+                                              name="circle"
+                                              style={{ width: 30, height: 30 }}
+                                            />
+                                          ) : (
+                                            <>Approve</>
+                                          )}
+                                        </div>
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        className="glow-on-hover"
+                                        onClick={handleBuy}
+                                        disabled={isApproved || isApprovedBuy}
+                                      >
+                                        {spinnerBuy ? (
+                                          <Spinner
+                                            name="circle"
+                                            style={{ width: 30, height: 30 }}
+                                          />
+                                        ) : (
+                                          <>Buy</>
+                                        )}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          ) : null}
                         </>
                       ) : (
                         <>
@@ -575,16 +895,20 @@ function HomePage(props) {
                               style={{ width: 30, height: 30 }}
                             />
                           ) : (
-                            <button
+                            <a
                               className="glow-on-hover"
+                              href="https://surveyheart.com/form/62e9df5224ff9216a54ad52a"
+                              target="_blank"
                               style={{
                                 width: "300px",
                                 height: "auto",
                                 padding: 10,
+                                textDecoration: "none",
+                                textAlign: "center",
                               }}
                             >
                               Add To Whitelist
-                            </button>
+                            </a>
                           )}
                         </>
                       )}
@@ -632,81 +956,170 @@ function HomePage(props) {
                   >
                     Token Information{" "}
                   </h2>
-                  <div>
-                    <h4
-                      className="card-info__title"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>Presale Rate :</div>
-                      <div>{details && details[2] / Math.pow(10, 18)} BUSD</div>
-                    </h4>
-                    <h4
-                      className="card-info__title"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>Start Time :</div>
+                  {switchIco == "cyber" ? (
+                    <>
                       <div>
-                        {details &&
-                          moment.unix(details[3]).format("DD/MM/YYYY")}
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Presale Rate :</div>
+                          <div>
+                            {detailsCyber && detailsCyber[2] / Math.pow(10, 18)}{" "}
+                            BUSD
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Start Time :</div>
+                          <div>
+                            {detailsCyber &&
+                              moment.unix(detailsCyber[3]).format("DD/MM/YYYY")}
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>End Time :</div>
+                          <div>
+                            {detailsCyber &&
+                              moment.unix(detailsCyber[4]).format("DD/MM/YYYY")}
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>User Will Get :</div>
+                          <div>
+                            {kees + " "}
+                            Cyber
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Vesting Round :</div>
+                          <div>0</div>
+                        </h4>
+                        {!sale && (
+                          <CounterComponent endDate={detailsCyber[4]} />
+                        )}
                       </div>
-                    </h4>
-                    <h4
-                      className="card-info__title"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>End Time :</div>
-                      <div>
-                        {details &&
-                          moment.unix(details[4]).format("DD/MM/YYYY")}
-                      </div>
-                    </h4>
-                    <h4
-                      className="card-info__title"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>User Will Get :</div>
-                      <div>
-                        {kees + " "}
-                        Voyce
-                      </div>
-                    </h4>
-                    <h4
-                      className="card-info__title"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div>Vesting Round :</div>
-                      <div>0</div>
-                    </h4>
-                    {!sale && <CounterComponent endDate={details[4]} />}
-                  </div>
 
-                  <p className="card-info__description">
-                    {!sale && (
-                      <ProgressBar
-                        animated
-                        now={(details[5] / details[7]) * 100}
-                      />
-                    )}
-                  </p>
-                  <span className="card-info__advice">
-                    Revenue will change based on mining difficulty and BUSD
-                    Price.
-                  </span>
+                      <p className="card-info__description">
+                        {!sale && (
+                          <ProgressBar
+                            animated
+                            now={(detailsCyber[5] / detailsCyber[7]) * 100}
+                          />
+                        )}
+                      </p>
+                      <span className="card-info__advice">
+                        Revenue will change based on mining difficulty and BUSD
+                        Price.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      <div>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Presale Rate :</div>
+                          <div>
+                            {details && details[2] / Math.pow(10, 18)} BUSD
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Start Time :</div>
+                          <div>
+                            {details &&
+                              moment.unix(details[3]).format("DD/MM/YYYY")}
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>End Time :</div>
+                          <div>
+                            {details &&
+                              moment.unix(details[4]).format("DD/MM/YYYY")}
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>User Will Get :</div>
+                          <div>
+                            {kees + " "}
+                            Voyce
+                          </div>
+                        </h4>
+                        <h4
+                          className="card-info__title"
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div>Vesting Round :</div>
+                          <div>0</div>
+                        </h4>
+                        {!sale && <CounterComponent endDate={details[4]} />}
+                      </div>
+                      <p className="card-info__description">
+                        {!sale && (
+                          <ProgressBar
+                            animated
+                            now={(details[5] / details[7]) * 100}
+                          />
+                        )}
+                      </p>
+                      <span className="card-info__advice">
+                        Revenue will change based on mining difficulty and BUSD
+                        Price.
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </>
@@ -765,10 +1178,9 @@ function HomePage(props) {
               </h2>
               <br />
               <p className="invest-smart-article__content__description">
-                CyberVoyce has a vision to simplify fintech, by allowing Crypto
-                to Fiat (Voyce) transactions done instantaneously and with ease.
-                We envision to give bank like features to people without bank
-                access.
+                CyberVoyces vision is to create the first true platform that
+                merges Web 2 and Web 3. We see a decentralized social platform
+                where any user can own their data and monetize their following.
               </p>
             </div>
             <img
@@ -784,10 +1196,18 @@ function HomePage(props) {
                 OUR MISSION
               </h2>
               <p className="detailed-stats-article__content__description">
-                CyberVoyce’s mission is to offer simple, transparent & fast
-                transactions within an ecosystem that's created to give people
-                the power to move digital value through traditional or crypto
-                securely.
+                We want to give all users the tools to create any form of media,
+                create them into NFTs, and monetize from them without the need
+                to sell if the creator wants to keep the NFT. Any form of media
+                from videos, pictures, filters, music, and more can be made into
+                NFTs for the world to use and see! Any and all forms of NFTs
+                will have the ability to generate income for the original owner.
+                We will give these tools to all users, but then it will be up to
+                the user for their success. Not only do we want users to
+                monetize and own their data but we want them to vote on how the
+                platform works! From UI changes , algorithm resets, ease of use,
+                etc. users have the ultimate voyce on how CyberVoyce is run.
+                Finally a platfrom for users by users.
               </p>
             </div>
             <img

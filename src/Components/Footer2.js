@@ -1,5 +1,5 @@
 import React from "react";
-import pdf from "../assets/VaultyWp.pdf";
+
 export default function Footer2() {
   return (
     <div className="flex">
@@ -27,43 +27,7 @@ export default function Footer2() {
         </ul>
       </div>
 
-      <div className="flex ">
-       
-        <div className="flex flex-col">
-          <a
-            href={pdf}
-            target="_blank"
-            className="main-footer-navbar__nav__link"
-          >
-            <button
-              style={{
-                padding: 10,
-                height: "auto",
-                width: 200,
-                fontSize: "unset",
-              }}
-            >
-              Download Whitepaper <i class="fa fa-download"></i>
-            </button>
-          </a>
-          <a
-            href={pdf}
-            target="_blank"
-            className="main-footer-navbar__nav__link"
-          >
-            <button
-              style={{
-                padding: 10,
-                height: "auto",
-                width: 200,
-                fontSize: "unset",
-              }}
-            >
-              Subscribe for newsletter <i class="fa fa-download"></i>
-            </button>
-          </a>
-        </div>
-      </div>
+      <div className="flex "></div>
     </div>
   );
 }

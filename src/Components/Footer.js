@@ -1,7 +1,7 @@
 import React from "react";
 import "./footer.css";
-import logo from "../assets/Alpha-Logo-white.png";
-import pdf from "../assets/VaultyWp.pdf";
+import logo from "../assets/logo.png";
+
 export default function Footer() {
   return (
     <div>

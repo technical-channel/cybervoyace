@@ -17,7 +17,7 @@ function Congratulations() {
               <h1>Payment Success !</h1>
               <p style={{ fontSize: "14px   " }}>
                 {" "}
-                Thankyou for being a part of voyace.
+                Thankyou for being a part of ICO.
               </p>
               <a
                 onClick={() => {
