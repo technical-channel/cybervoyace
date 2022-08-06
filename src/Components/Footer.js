@@ -1,6 +1,6 @@
 import React from "react";
 import "./footer.css";
-import logo from "../assets/logo.png";
+import logo from "../assets/Alpha-Logo-white.png";
 
 export default function Footer() {
   return (
@@ -8,7 +8,11 @@ export default function Footer() {
       {" "}
       <footer className="text-center bg-[#0d0d2b] text-white">
         <div className="flex flex-wrap justify-evenly p-20 items-start">
-          <img src={logo} alt="Vaulty Logo" className="main-footer__logo" />
+          <img
+            src={logo}
+            alt="Cyber voyace logo"
+            className="main-footer__logo"
+          />
           <div>
             <ul style={{ textAlign: "justify" }}>
               <li className="text-2xl p-2 font-bold text-white">Application</li>
