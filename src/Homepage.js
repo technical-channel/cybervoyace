@@ -597,6 +597,7 @@ function HomePage(props) {
                                     style={{
                                       textAlign: "center",
                                       color: "black !important",
+                                      fontSize: "20px !important",
                                     }}
                                   >
                                     Buy Cyber
@@ -751,6 +752,7 @@ function HomePage(props) {
                                     style={{
                                       textAlign: "center",
                                       color: "black",
+                                      fontSize: "20px !important",
                                     }}
                                   >
                                     Buy Voyce
