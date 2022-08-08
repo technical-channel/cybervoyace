@@ -51,8 +51,10 @@ function HomePage(props) {
   const [sale, setSale] = useState(true);
   const [tokenData, setTokenData] = useState("");
   const [whitelisted, setWhitelisted] = useState(false);
+  const [cyberIcoOver, setCyberIcoOver] = useState(false);
   const [isApprovedBuy, setIsApprovedBuy] = useState(true);
   const [detailsCyber, setDetailsCyber] = useState("");
+  const [apprcyber, setCyberAppr] = useState(false);
   const [details, setDetails] = useState([]);
   const [token, setToken] = useState("");
   const [spinnerAppr, setSpinnerAppr] = useState(false);
@@ -82,9 +84,12 @@ function HomePage(props) {
       } else {
         let contract = await new web3_.eth.Contract(icoAbi, ico).methods;
         const res = await contract.getTokenomics().call();
+        console.log(res, "response");
         let cyberContract = await new web3_.eth.Contract(icoAbi, cyberICO)
           .methods;
+        console.log(cyberContract);
         const TokenomicsCyber = await cyberContract.getTokenomics().call();
+        console.log(TokenomicsCyber, "response");
         setDetailsCyber(TokenomicsCyber);
         setConnect(true);
         axios
@@ -105,14 +110,11 @@ function HomePage(props) {
             setWhitelisted(false);
             console.log(err.message, "in this console yeh yoooo");
           });
-        const whitelisted = await contract
-          .verifyUser(props.metamaskAddress)
-          .call();
-        console.log(whitelisted, "whitelisted");
-        setWhitelisted(whitelisted);
-        console.log(res);
+
         setDetails(res);
         const icoOver = await contract.isIcoOver().call();
+        const cyberIcoOver = await cyberContract.isIcoOver().call();
+        setCyberIcoOver(cyberIcoOver);
         setSale(icoOver);
         console.log("ico khatam", icoOver);
         setDetails(res);
@@ -144,10 +146,16 @@ function HomePage(props) {
     if (isNumeric(e.target.value)) {
       setError("");
       setToken(e.target.value);
-
-      setKees(
-        e.target.value / parseFloat(details[2] / Math.pow(10, 18)).toFixed(4)
-      );
+      if (switchIco == "cyber") {
+        setKees(
+          e.target.value /
+            parseFloat(detailsCyber[2] / Math.pow(10, 18)).toFixed(4)
+        );
+      } else {
+        setKees(
+          e.target.value / parseFloat(details[2] / Math.pow(10, 18)).toFixed(4)
+        );
+      }
     } else {
       setKees("");
       setError("Please Enter Numbers In Input");
@@ -157,6 +165,7 @@ function HomePage(props) {
   }
 
   async function handleApprove() {
+    setCyberAppr(true);
     if (!connect) {
       Swal.fire("Please connect Metamask");
       setToken("");
@@ -164,7 +173,7 @@ function HomePage(props) {
       setIsApproved(true);
       setIsApprovedBuy(true);
     } else {
-      if (token === "0") {
+      if (token === "0" || token === "0.0") {
         setError("Please Enter Value Greater Then 0");
         setToken("");
         setToken("");
@@ -228,6 +237,7 @@ function HomePage(props) {
     }
   }
   async function handleApproveCyber() {
+    setCyberAppr(true);
     if (!connect) {
       Swal.fire("Please connect Metamask");
       setToken("");
@@ -235,7 +245,7 @@ function HomePage(props) {
       setIsApproved(true);
       setIsApprovedBuy(true);
     } else {
-      if (token === "0") {
+      if (token === "0" || token === "0.0") {
         setError("Please Enter Value Greater Then 0");
         setToken("");
         setToken("");
@@ -252,8 +262,8 @@ function HomePage(props) {
         let addAppr = store.getState().ConnectivityReducer.metamaskAddress;
         setAddAppr(addAppr);
 
-        const tkn = web3_.utils.toWei(token.toString(), "ether");
-
+        const tkn = web3_.utils.toWei(token, "ether");
+        console.log(cyberICO, tkn);
         console.log(res / Math.pow(10, 18) < parseFloat(token));
         if (res / Math.pow(10, 18) > parseFloat(token)) {
           await new web3_.eth.Contract(busdAbi, busdContract).methods
@@ -344,7 +354,7 @@ function HomePage(props) {
     console.log(await new web3_.eth.Contract(icoAbi, ico).methods);
   }
   async function handleBuyCyber() {
-    const tkn = web3_.utils.toWei(token.toString(), "ether");
+    const tkn = web3_.utils.toWei(token, "ether");
     setSpinnerBuy(true);
     if (details && details[3] > Math.floor(new Date().getTime() / 1000.0)) {
       Swal.fire(
@@ -360,10 +370,12 @@ function HomePage(props) {
       setSpinnerAppr(false);
       setSpinnerBuy(false);
     } else {
+      console.log(tkn, typeof tkn);
       await new web3_.eth.Contract(icoAbi, cyberICO).methods
         .SaleICOToken(tkn)
         .send({
           from: props.metamaskAddress,
+          gasPrice: web3_.utils.toWei("0.00000002", "ether"),
         })
         .then((res) => {
           console.log(res);
@@ -375,7 +387,6 @@ function HomePage(props) {
           setKees("");
           navigate("/success");
         })
-
         .catch((err) => {
           setSpinnerBuy(false);
           console.log(err);
@@ -516,7 +527,7 @@ function HomePage(props) {
             <div className="stats-section__reference">
               <i className="fas fa-user" />
               <h3 className="stats-section__reference__title">
-                Voyace Transactions
+                Voyce Transactions
               </h3>
               <p className="stats-section__reference__description">
                 Get coins by recieveing NFT awards
@@ -560,6 +571,7 @@ function HomePage(props) {
                             <button
                               className="glow-on-hover"
                               onClick={() => setSwitchIco("cyber")}
+                              disabled={apprcyber}
                             >
                               <div
                                 style={{
@@ -572,320 +584,360 @@ function HomePage(props) {
                             </button>
                             <button
                               className="glow-on-hover"
-                              onClick={() => setSwitchIco("Voyace")}
+                              onClick={() => setSwitchIco("voyce")}
+                              disabled={apprcyber}
                             >
-                              <>Buy Voyace</>
+                              <>Buy Voyce</>
                             </button>
                           </div>
                           {switchIco == "cyber" ? (
                             <>
                               {" "}
-                              <div
-                                className="flexDiv"
-                                style={{
-                                  background: "white",
-                                  maxWidth: "400px",
-                                  backgroundColor: "#fff",
-                                  color: "#000",
-                                  borderRadius: "10px",
-                                  padding: "25px 15px",
-                                  textAlign: "justify",
-                                }}
-                              >
-                                <div>
-                                  <p
-                                    style={{
-                                      textAlign: "center",
-                                      color: "black !important",
-                                      fontSize: "20px !important",
-                                    }}
-                                  >
-                                    Buy Cyber
-                                  </p>
+                              {!cyberIcoOver ? (
+                                <>
                                   <div
+                                    className="flexDiv"
                                     style={{
-                                      display: "flex",
-                                      alignItems: "center",
+                                      background: "white",
+                                      maxWidth: "400px",
+                                      backgroundColor: "#fff",
+                                      color: "#000",
+                                      borderRadius: "10px",
+                                      padding: "25px 15px",
+                                      textAlign: "justify",
                                     }}
                                   >
-                                    <input
-                                      type="text"
-                                      onChange={handleChange}
-                                      placeholder="Enter Amount To Buy"
-                                      style={{
-                                        padding: 8,
-                                        marginTop: 10,
-                                        width: "100%",
-                                        border: "2px solid black !important",
-                                        backgroundColor: "#e9ecef",
-                                        borderRadius: 5,
-                                        fontSize: 14,
-                                      }}
-                                      value={token}
-                                      disabled={inputDisable}
-                                    />
-                                    <div
-                                      style={{
-                                        padding: 5,
-                                        border: "1px solid black",
-                                        width: "85px",
-                                        justifyContent: "space-around",
-                                        marginTop: "10px",
-                                        backgroundColor: "#e9ecef",
-                                        borderRadius: 7,
-                                        marginLeft: 8,
-                                        fontSize: 14,
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <img src={bnb} width="20" />
-                                      <div>BUSD</div>
-                                    </div>
-                                  </div>
-
-                                  <span>
-                                    <p style={{ color: "red" }}>{error}</p>
-                                  </span>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <input
-                                      type="text"
-                                      placeholder={`${kees} Cyber`}
-                                      style={{
-                                        padding: 10,
-                                        marginTop: 10,
-                                        fontSize: 15,
-                                        width: "100%",
-                                      }}
-                                      disabled
-                                    />
-                                    <div
-                                      style={{
-                                        padding: 5,
-                                        border: "1px solid black",
-                                        width: "85px",
-                                        justifyContent: "space-around",
-                                        marginTop: "10px",
-                                        borderRadius: 7,
-                                        marginLeft: 8,
-                                        fontSize: 14,
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <div>Cyber</div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flexDivBtn">
-                                  {isApproved ? (
-                                    <>
-                                      {" "}
-                                      <button
-                                        className="glow-on-hover"
-                                        onClick={handleApproveCyber}
-                                        disabled={
-                                          token == "" || isApproved == false
-                                        }
+                                    <div>
+                                      <h1
+                                        style={{
+                                          textAlign: "center",
+                                          color: "black",
+                                          fontSize: "28px !important",
+                                        }}
                                       >
+                                        Buy Cyber
+                                      </h1>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <input
+                                          type="text"
+                                          onChange={handleChange}
+                                          placeholder="Enter Amount To Buy"
+                                          style={{
+                                            padding: 8,
+                                            marginTop: 10,
+                                            width: "100%",
+                                            border:
+                                              "2px solid black !important",
+                                            backgroundColor: "#e9ecef",
+                                            borderRadius: 5,
+                                            fontSize: 14,
+                                          }}
+                                          value={token}
+                                          disabled={inputDisable}
+                                        />
                                         <div
                                           style={{
-                                            display: "flex",
+                                            padding: 5,
+                                            border: "1px solid black",
+                                            width: "85px",
                                             justifyContent: "space-around",
+                                            marginTop: "10px",
+                                            backgroundColor: "#e9ecef",
+                                            borderRadius: 7,
+                                            marginLeft: 8,
+                                            fontSize: 14,
+                                            display: "flex",
+                                            alignItems: "center",
                                           }}
                                         >
-                                          {spinnerAppr ? (
-                                            <Spinner
-                                              name="circle"
-                                              style={{ width: 30, height: 30 }}
-                                            />
-                                          ) : (
-                                            <>Approve</>
-                                          )}
+                                          <img src={bnb} width="20" />
+                                          <div>BUSD</div>
                                         </div>
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        className="glow-on-hover"
-                                        onClick={handleBuyCyber}
-                                        disabled={isApproved || isApprovedBuy}
+                                      </div>
+
+                                      <span>
+                                        <p style={{ color: "red" }}>{error}</p>
+                                      </span>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
                                       >
-                                        {spinnerBuy ? (
-                                          <Spinner
-                                            name="circle"
-                                            style={{ width: 30, height: 30 }}
-                                          />
-                                        ) : (
-                                          <>Buy</>
-                                        )}
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
+                                        <input
+                                          type="text"
+                                          placeholder={`${kees} Cyber`}
+                                          style={{
+                                            padding: 10,
+                                            marginTop: 10,
+                                            fontSize: 15,
+                                            width: "100%",
+                                          }}
+                                          disabled
+                                        />
+                                        <div
+                                          style={{
+                                            padding: 5,
+                                            border: "1px solid black",
+                                            width: "85px",
+                                            justifyContent: "space-around",
+                                            marginTop: "10px",
+                                            borderRadius: 7,
+                                            marginLeft: 8,
+                                            fontSize: 14,
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <div>Cyber</div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flexDivBtn">
+                                      {isApproved ? (
+                                        <>
+                                          {" "}
+                                          <button
+                                            className="glow-on-hover"
+                                            onClick={handleApproveCyber}
+                                            disabled={
+                                              token == "" || isApproved == false
+                                            }
+                                          >
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                justifyContent: "space-around",
+                                              }}
+                                            >
+                                              {spinnerAppr ? (
+                                                <Spinner
+                                                  name="circle"
+                                                  style={{
+                                                    width: 30,
+                                                    height: 30,
+                                                  }}
+                                                />
+                                              ) : (
+                                                <>Approve</>
+                                              )}
+                                            </div>
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            className="glow-on-hover"
+                                            onClick={handleBuyCyber}
+                                            disabled={
+                                              isApproved || isApprovedBuy
+                                            }
+                                          >
+                                            {spinnerBuy ? (
+                                              <Spinner
+                                                name="circle"
+                                                style={{
+                                                  width: 30,
+                                                  height: 30,
+                                                }}
+                                              />
+                                            ) : (
+                                              <>Buy</>
+                                            )}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <button
+                                  className="glow-on-hover"
+                                  style={{
+                                    width: "300px",
+                                    height: "auto",
+                                    padding: 10,
+                                  }}
+                                >
+                                  Cyber ICO Is Over You Can Not Invest
+                                </button>
+                              )}
                             </>
                           ) : null}
-                          {switchIco == "Voyace" ? (
+                          {switchIco == "voyce" ? (
                             <>
-                              <div
-                                className="flexDiv"
-                                style={{
-                                  background: "white",
-                                  maxWidth: "400px",
-                                  backgroundColor: "#fff",
-                                  color: "#000",
-                                  borderRadius: "10px",
-                                  padding: "25px 15px",
-                                  textAlign: "justify",
-                                }}
-                              >
-                                <div>
-                                  <p
-                                    style={{
-                                      textAlign: "center",
-                                      color: "black",
-                                      fontSize: "20px !important",
-                                    }}
-                                  >
-                                    Buy Voyce
-                                  </p>
+                              {!sale ? (
+                                <>
                                   <div
+                                    className="flexDiv"
                                     style={{
-                                      display: "flex",
-                                      alignItems: "center",
+                                      background: "white",
+                                      maxWidth: "400px",
+                                      backgroundColor: "#fff",
+                                      color: "#000",
+                                      borderRadius: "10px",
+                                      padding: "25px 15px",
+                                      textAlign: "justify",
                                     }}
                                   >
-                                    <input
-                                      type="text"
-                                      onChange={handleChange}
-                                      placeholder="Enter Amount To Buy"
-                                      style={{
-                                        padding: 8,
-                                        marginTop: 10,
-                                        width: "100%",
-                                        border: "2px solid black !important",
-                                        backgroundColor: "#e9ecef",
-                                        borderRadius: 5,
-                                        fontSize: 14,
-                                      }}
-                                      value={token}
-                                      disabled={inputDisable}
-                                    />
-                                    <div
-                                      style={{
-                                        padding: 5,
-                                        border: "1px solid black",
-                                        width: "85px",
-                                        justifyContent: "space-around",
-                                        marginTop: "10px",
-                                        backgroundColor: "#e9ecef",
-                                        borderRadius: 7,
-                                        marginLeft: 8,
-                                        fontSize: 14,
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <img src={bnb} width="20" />
-                                      <div>BUSD</div>
-                                    </div>
-                                  </div>
-
-                                  <span>
-                                    <p style={{ color: "red" }}>{error}</p>
-                                  </span>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <input
-                                      type="text"
-                                      placeholder={`${kees} Voyce`}
-                                      style={{
-                                        padding: 10,
-                                        marginTop: 10,
-                                        fontSize: 15,
-                                        width: "100%",
-                                      }}
-                                      disabled
-                                    />
-                                    <div
-                                      style={{
-                                        padding: 5,
-                                        border: "1px solid black",
-                                        width: "85px",
-                                        justifyContent: "space-around",
-                                        marginTop: "10px",
-                                        borderRadius: 7,
-                                        marginLeft: 8,
-                                        fontSize: 14,
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <div>Voyce</div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flexDivBtn">
-                                  {isApproved ? (
-                                    <>
-                                      {" "}
-                                      <button
-                                        className="glow-on-hover"
-                                        onClick={handleApprove}
-                                        disabled={
-                                          token == "" || isApproved == false
-                                        }
+                                    <div>
+                                      <h1
+                                        style={{
+                                          textAlign: "center",
+                                          color: "black",
+                                          fontSize: "28px !important",
+                                        }}
                                       >
+                                        Buy Voyce
+                                      </h1>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <input
+                                          type="text"
+                                          onChange={handleChange}
+                                          placeholder="Enter Amount To Buy"
+                                          style={{
+                                            padding: 8,
+                                            marginTop: 10,
+                                            width: "100%",
+                                            border:
+                                              "2px solid black !important",
+                                            backgroundColor: "#e9ecef",
+                                            borderRadius: 5,
+                                            fontSize: 14,
+                                          }}
+                                          value={token}
+                                          disabled={inputDisable}
+                                        />
                                         <div
                                           style={{
-                                            display: "flex",
+                                            padding: 5,
+                                            border: "1px solid black",
+                                            width: "85px",
                                             justifyContent: "space-around",
+                                            marginTop: "10px",
+                                            backgroundColor: "#e9ecef",
+                                            borderRadius: 7,
+                                            marginLeft: 8,
+                                            fontSize: 14,
+                                            display: "flex",
+                                            alignItems: "center",
                                           }}
                                         >
-                                          {spinnerAppr ? (
-                                            <Spinner
-                                              name="circle"
-                                              style={{ width: 30, height: 30 }}
-                                            />
-                                          ) : (
-                                            <>Approve</>
-                                          )}
+                                          <img src={bnb} width="20" />
+                                          <div>BUSD</div>
                                         </div>
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        className="glow-on-hover"
-                                        onClick={handleBuy}
-                                        disabled={isApproved || isApprovedBuy}
+                                      </div>
+
+                                      <span>
+                                        <p style={{ color: "red" }}>{error}</p>
+                                      </span>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
                                       >
-                                        {spinnerBuy ? (
-                                          <Spinner
-                                            name="circle"
-                                            style={{ width: 30, height: 30 }}
-                                          />
-                                        ) : (
-                                          <>Buy</>
-                                        )}
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
+                                        <input
+                                          type="text"
+                                          placeholder={`${kees} Voyce`}
+                                          style={{
+                                            padding: 10,
+                                            marginTop: 10,
+                                            fontSize: 15,
+                                            width: "100%",
+                                          }}
+                                          disabled
+                                        />
+                                        <div
+                                          style={{
+                                            padding: 5,
+                                            border: "1px solid black",
+                                            width: "85px",
+                                            justifyContent: "space-around",
+                                            marginTop: "10px",
+                                            borderRadius: 7,
+                                            marginLeft: 8,
+                                            fontSize: 14,
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <div>Voyce</div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flexDivBtn">
+                                      {isApproved ? (
+                                        <>
+                                          {" "}
+                                          <button
+                                            className="glow-on-hover"
+                                            onClick={handleApprove}
+                                            disabled={
+                                              token == "" || isApproved == false
+                                            }
+                                          >
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                justifyContent: "space-around",
+                                              }}
+                                            >
+                                              {spinnerAppr ? (
+                                                <Spinner
+                                                  name="circle"
+                                                  style={{
+                                                    width: 30,
+                                                    height: 30,
+                                                  }}
+                                                />
+                                              ) : (
+                                                <>Approve</>
+                                              )}
+                                            </div>
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            className="glow-on-hover"
+                                            onClick={handleBuy}
+                                            disabled={
+                                              isApproved || isApprovedBuy
+                                            }
+                                          >
+                                            {spinnerBuy ? (
+                                              <Spinner
+                                                name="circle"
+                                                style={{
+                                                  width: 30,
+                                                  height: 30,
+                                                }}
+                                              />
+                                            ) : (
+                                              <>Buy</>
+                                            )}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <h1>Voyce is over</h1>
+                              )}
                             </>
                           ) : null}
                         </>
@@ -1318,90 +1370,10 @@ function HomePage(props) {
       <section>
         <Carosual />
       </section>
-      <section id="roadmap">
+      <section id="roadmap" style={{ marginTop: 50 }}>
         <img src={RoadmapPc} className="widthCls" />
       </section>
 
-      {/* Main footer */}
-      {/* <footer className="main-footer" style={{ padding: "10px 0" }}>
-        <div className="footer-container">
-          <img
-            src={logo}
-            alt="KeeSwap company logo"
-            className="main-footer__logo"
-          />
-
-          <nav className="main-footer-navbar">
-
-            <ul className="main-footer-navbar__nav">
-              <li className="main-footer-navbar__nav__item">
-                <h3 className="main-footer-navbar__nav__title">Quick Link</h3>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a href="#" className="main-footer-navbar__nav__link">
-                  Home
-                </a>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a href="#about" className="main-footer-navbar__nav__link">
-                  Buy
-                </a>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a href="#values" className="main-footer-navbar__nav__link">
-                  Values
-                </a>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a href="#price" className="main-footer-navbar__nav__link">
-                  Price
-                </a>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a href="#roadmap" className="main-footer-navbar__nav__link">
-                  Roadmap
-                </a>
-              </li>
-            </ul>
-
-            <ul className="main-footer-navbar__nav">
-              <li className="main-footer-navbar__nav__item">
-                <h3 className="main-footer-navbar__nav__title">Resources</h3>
-              </li>
-              <li className="main-footer-navbar__nav__item">
-                <a
-                  href={pdf}
-                  target="_blank"
-                  className="main-footer-navbar__nav__link"
-                >
-                  Download whitepaper
-                </a>
-              </li>
-            </ul>
-          </nav>
-
-          <div className="copy-and-social">
-            <h3
-              className="copy-and-social__copy"
-              style={{ color: "aliceblue" }}
-            >
-              ©2022 Valuty. All rights reserved
-            </h3>
-            <div className="social-icons">
-              <a href="https://www.facebook.com/CyberVoycePRO" target="_blank">
-                <i className="fab fa-facebook-f" />
-              </a>
-              <a href="https://www.instagram.com/CyberVoycepro/" target="_blank">
-                <i className="fab fa-instagram" />
-              </a>
-
-              <a href="https://twitter.com/CyberVoycePRO" target="_blank">
-                <i className="fab fa-twitter" width="150" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer> */}
       <Footer />
       {/* Attribution footer */}
     </div>

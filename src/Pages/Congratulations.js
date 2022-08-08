@@ -15,7 +15,7 @@ function Congratulations() {
             </div>
             <div class="content">
               <h1>Payment Success !</h1>
-              <p style={{ fontSize: "14px   " }}>
+              <p style={{ fontSize: "14px" }}>
                 {" "}
                 Thankyou for being a part of ICO.
               </p>
