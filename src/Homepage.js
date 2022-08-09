@@ -528,9 +528,11 @@ function HomePage(props) {
           <ScrollToTop />
           <div className="main-header-content-container">
             <div className="main-header-content-principal">
-              <h1 className="main-header-content-principal__title">
-                The Most Securitized & Convenient Wallet To Store Cryptos &
-                NFT's
+              <h1
+                className="main-header-content-principal__title"
+                style={{ textTransform: "uppercase" }}
+              >
+                The future of social media is finally here
               </h1>
               <p className="main-header-content-principal__description typewriter">
                 Welcome to CyberVoyce where Web 2 meets Web 3. Join us in our
@@ -551,31 +553,7 @@ function HomePage(props) {
         {/* Why us section */}
         <section className="why-us-wrapper">
           {/* Stats */}
-          <div className="stats-section">
-            <div className="stats-section__reference">
-              <i className="fas fa-chart-line" />
-              <h3 className="stats-section__reference__title">DAO</h3>
-              <p className="stats-section__reference__description">
-                Crypto Wallet
-              </p>
-            </div>
-            <div className="stats-section__reference">
-              <i className="fas fa-user" />
-              <h3 className="stats-section__reference__title">
-                Voyce Transactions
-              </h3>
-              <p className="stats-section__reference__description">
-                Get coins by recieveing NFT awards
-              </p>
-            </div>
-            <div className="stats-section__reference">
-              <i className="fas fa-globe" />
-              <h3 className="stats-section__reference__title">Swap to ETH</h3>
-              <p className="stats-section__reference__description">
-                Invest & Earn
-              </p>
-            </div>
-          </div>
+
           {/* Why us */}
           <div className="why-us-section" id="buy">
             <div className="why-us-section__content">
@@ -795,7 +773,6 @@ function HomePage(props) {
                                 <button
                                   className="glow-on-hover"
                                   style={{
-                                    width: "300px",
                                     height: "auto",
                                     padding: 10,
                                   }}
@@ -1006,7 +983,7 @@ function HomePage(props) {
                     <>
                       <button
                         className="glow-on-hover"
-                        style={{ width: "300px", height: "auto", padding: 10 }}
+                        style={{ height: "auto", padding: 10 }}
                       >
                         ICO Is Over You Can Not Invest
                       </button>
@@ -1016,7 +993,7 @@ function HomePage(props) {
               ) : (
                 <button
                   className="glow-on-hover"
-                  style={{ width: "300px", height: "auto", padding: 10 }}
+                  style={{ height: "auto", padding: 10 }}
                 >
                   Please Connect Wallet
                 </button>
@@ -1216,9 +1193,6 @@ function HomePage(props) {
         </section>
         {/* Cryptocurrencies section */}
         <section className="cryptocurrencies-section" id="products">
-          <h2 className="cryptocurrencies-section__title">
-            Advantages Of Using CyberVoyce
-          </h2>
           <div className="cryptocurrencies-info-cards">
             <div className="info-card">
               <img src={cardicon1} width="60" />
@@ -1306,28 +1280,7 @@ function HomePage(props) {
               className="detailed-stats-article__graphic"
             />
           </article>
-          <article className="grow-profit-article">
-            <div
-              className="grow-profit-article__content items-baseline md:justify-center"
-              style={{ flexDirection: "column", alignItems: "unset" }}
-            >
-              <h2
-                className="grow-profit-article__content__title"
-                style={{ fontSize: "24px !important" }}
-              >
-                Inclusivity
-              </h2>
-              <p className="grow-profit-article__content__description">
-                At CyberVoyce we put inclusivity at the center of our purpose.
-              </p>
-            </div>
-            <img
-              src={side3}
-              style={{ width: 300, height: 400 }}
-              alt="Profit graphic"
-              className="grow-profit-article__graphic"
-            />
-          </article>
+
           {/* <div class="basr-social-share social">
             <ul class="">
               <li>
