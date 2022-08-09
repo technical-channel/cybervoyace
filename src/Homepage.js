@@ -116,7 +116,6 @@ function HomePage(props) {
         const icoOver = await contract.isIcoOver().call();
         const cyberIcoOver = await cyberContract.isIcoOver().call();
 
-        alert(cyberIcoOver);
         setSale(icoOver);
         console.log("ico khatam", icoOver);
         setDetails(res);
@@ -372,7 +371,6 @@ function HomePage(props) {
           setIsApproved(true);
           setSpinnerAppr(false);
           setKees("");
-          navigate("/success");
         })
 
         .catch((err) => {
@@ -422,7 +420,6 @@ function HomePage(props) {
           setIsApproved(true);
           setSpinnerAppr(false);
           setKees("");
-          navigate("/success");
         })
         .catch((err) => {
           setSpinnerBuy(false);
@@ -650,7 +647,7 @@ function HomePage(props) {
                                         style={{
                                           textAlign: "center",
                                           color: "black",
-                                          fontSize: "28px !important",
+                                          fontSize: "20px",
                                         }}
                                       >
                                         Buy Cyber
@@ -829,7 +826,7 @@ function HomePage(props) {
                                         style={{
                                           textAlign: "center",
                                           color: "black",
-                                          fontSize: "28px !important",
+                                          fontSize: "20px",
                                         }}
                                       >
                                         Buy Voyce
