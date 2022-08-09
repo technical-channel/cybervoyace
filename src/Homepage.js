@@ -45,6 +45,7 @@ import Footer from "./Components/Footer";
 import Footer2 from "./Components/Footer2";
 import Carosual from "./Components/Carosual";
 import axios from "axios";
+import ScrollToTop from "./Components/ScrollToTop";
 function HomePage(props) {
   const [connect, setConnect] = useState(false);
   const navigate = useNavigate();
@@ -114,7 +115,8 @@ function HomePage(props) {
         setDetails(res);
         const icoOver = await contract.isIcoOver().call();
         const cyberIcoOver = await cyberContract.isIcoOver().call();
-        setCyberIcoOver(cyberIcoOver);
+
+        alert(cyberIcoOver);
         setSale(icoOver);
         console.log("ico khatam", icoOver);
         setDetails(res);
@@ -180,6 +182,22 @@ function HomePage(props) {
         setKees("");
         setIsApproved(true);
         setIsApprovedBuy(true);
+      } else if (
+        details &&
+        details[3] > Math.floor(new Date().getTime() / 1000.0)
+      ) {
+        Swal.fire(
+          `Investment will start from ${moment
+            .unix(details[3])
+            .format("DD/MM/YYYY")}`
+        );
+        setToken("");
+        setKees("");
+        setInputDisable(false);
+        setIsApproved(true);
+        setIsApprovedBuy(true);
+        setSpinnerAppr(false);
+        setSpinnerBuy(false);
       } else {
         setSpinnerAppr(true);
         let res = await new web3_.eth.Contract(busdAbi, busdContract).methods
@@ -252,6 +270,22 @@ function HomePage(props) {
         setKees("");
         setIsApproved(true);
         setIsApprovedBuy(true);
+      } else if (
+        detailsCyber &&
+        detailsCyber[3] > Math.floor(new Date().getTime() / 1000.0)
+      ) {
+        Swal.fire(
+          `Investment will start from ${moment
+            .unix(details[3])
+            .format("DD/MM/YYYY")}`
+        );
+        setToken("");
+        setKees("");
+        setInputDisable(false);
+        setIsApproved(true);
+        setIsApprovedBuy(true);
+        setSpinnerAppr(false);
+        setSpinnerBuy(false);
       } else {
         setSpinnerAppr(true);
         let res = await new web3_.eth.Contract(busdAbi, busdContract).methods
@@ -356,7 +390,10 @@ function HomePage(props) {
   async function handleBuyCyber() {
     const tkn = web3_.utils.toWei(token, "ether");
     setSpinnerBuy(true);
-    if (details && details[3] > Math.floor(new Date().getTime() / 1000.0)) {
+    if (
+      detailsCyber &&
+      detailsCyber[3] > Math.floor(new Date().getTime() / 1000.0)
+    ) {
       Swal.fire(
         `Investment will start from ${moment
           .unix(details[3])
@@ -491,6 +528,7 @@ function HomePage(props) {
             </ul>
           </nav>
           {/* Header content */}
+          <ScrollToTop />
           <div className="main-header-content-container">
             <div className="main-header-content-principal">
               <h1 className="main-header-content-principal__title">
